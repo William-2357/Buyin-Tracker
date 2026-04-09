@@ -15,12 +15,10 @@ export function calculateSettlement(players) {
     else if (rounded < 0) debtors.push({ name: p.name, amount: -rounded })
   }
 
-  // Sort descending by amount
   creditors.sort((a, b) => b.amount - a.amount)
   debtors.sort((a, b) => b.amount - a.amount)
 
   const transactions = []
-
   let ci = 0
   let di = 0
 
@@ -48,19 +46,17 @@ export function calculateSettlement(players) {
 }
 
 /**
- * Adjust player nets when there is a house take or missing money.
- * Deducts proportionally from winners only.
+ * Mode 1: Deduct missing amount proportionally from winners.
  *
  * @param {Array<{name: string, net: number}>} players
- * @param {number} missingAmount  positive = money missing from pot
+ * @param {number} missingAmount
  * @returns {Array<{name: string, net: number}>}
  */
-export function adjustForMissingMoney(players, missingAmount) {
+export function adjustProportional(players, missingAmount) {
   if (!missingAmount || missingAmount <= 0) return players
 
   const winners = players.filter((p) => p.net > 0)
   const totalWinnings = winners.reduce((s, p) => s + p.net, 0)
-
   if (totalWinnings <= 0) return players
 
   return players.map((p) => {
@@ -68,4 +64,19 @@ export function adjustForMissingMoney(players, missingAmount) {
     const share = (p.net / totalWinnings) * missingAmount
     return { ...p, net: Math.round((p.net - share) * 100) / 100 }
   })
+}
+
+/**
+ * Mode 2: Floor all winners' nets to whole dollars.
+ * Losers are also floored (ceiling their loss) so they pay whole dollars.
+ * Any remaining cents just disappear (house keeps them).
+ *
+ * @param {Array<{name: string, net: number}>} players
+ * @returns {Array<{name: string, net: number}>}
+ */
+export function adjustTruncate(players) {
+  return players.map((p) => ({
+    ...p,
+    net: p.net >= 0 ? Math.floor(p.net) : -Math.floor(Math.abs(p.net)),
+  }))
 }

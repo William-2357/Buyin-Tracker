@@ -4,6 +4,7 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Home from './pages/Home'
 import Session from './pages/Session'
+import Stats from './pages/Stats'
 import './index.css'
 
 function RequireAuth({ children }) {
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/signup" element={<PublicOnly><Signup /></PublicOnly>} />
           <Route path="/" element={<RequireAuth><Home /></RequireAuth>} />
           <Route path="/session/:id" element={<RequireAuth><Session /></RequireAuth>} />
+          <Route path="/stats" element={<RequireAuth><Stats /></RequireAuth>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
