@@ -5,11 +5,9 @@ import Layout from '../components/Layout'
 export default function Stats() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
-  const [sortBy, setSortBy] = useState('net') // 'net' | 'sessions' | 'buyIn' | 'name'
 
   useEffect(() => {
     async function load() {
-      // Fetch all completed player_sessions (cash_out not null)
       const { data } = await supabase
         .from('player_sessions')
         .select('buy_ins, cash_out, players(id, name)')
@@ -17,7 +15,6 @@ export default function Stats() {
 
       if (!data) { setLoading(false); return }
 
-      // Aggregate by player
       const byPlayer = {}
       for (const ps of data) {
         const pid = ps.players?.id
@@ -34,33 +31,22 @@ export default function Stats() {
         byPlayer[pid].totalCashOut += Number(ps.cash_out)
       }
 
-      setRows(Object.values(byPlayer))
+      // Sort by net descending
+      const sorted = Object.values(byPlayer).sort(
+        (a, b) => (b.totalCashOut - b.totalBuyIn) - (a.totalCashOut - a.totalBuyIn)
+      )
+      setRows(sorted)
       setLoading(false)
     }
     load()
   }, [])
-
-  const sorted = [...rows].sort((a, b) => {
-    if (sortBy === 'net') return (b.totalCashOut - b.totalBuyIn) - (a.totalCashOut - a.totalBuyIn)
-    if (sortBy === 'sessions') return b.sessions - a.sessions
-    if (sortBy === 'buyIn') return b.totalBuyIn - a.totalBuyIn
-    if (sortBy === 'name') return a.name.localeCompare(b.name)
-    return 0
-  })
-
-  const cols = [
-    { key: 'name', label: 'Player' },
-    { key: 'sessions', label: 'Sessions' },
-    { key: 'buyIn', label: 'Total in' },
-    { key: 'net', label: 'Net' },
-  ]
 
   return (
     <Layout>
       <div className="space-y-6 pb-8">
         <div>
           <h2 className="text-xl font-bold text-white">Lifetime Stats</h2>
-          <p className="text-gray-400 text-sm">All completed sessions</p>
+          <p className="text-gray-400 text-sm">All completed sessions · sorted by net</p>
         </div>
 
         {loading ? (
@@ -72,61 +58,32 @@ export default function Stats() {
           </div>
         ) : (
           <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-            {/* Sort tabs */}
-            <div className="flex border-b border-gray-800">
-              {cols.map((c) => (
-                <button
-                  key={c.key}
-                  onClick={() => setSortBy(c.key)}
-                  className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
-                    sortBy === c.key
-                      ? 'text-green-400 border-b-2 border-green-500'
-                      : 'text-gray-500 hover:text-gray-300'
-                  }`}
-                >
-                  {c.label}
-                </button>
-              ))}
+            {/* Column headers */}
+            <div className="grid grid-cols-3 px-4 py-2 border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wide">
+              <span>Player</span>
+              <span className="text-right">Total in</span>
+              <span className="text-right">Net</span>
             </div>
 
             {/* Rows */}
             <div className="divide-y divide-gray-800">
-              {sorted.map((p, i) => {
+              {rows.map((p) => {
                 const net = p.totalCashOut - p.totalBuyIn
                 const netColor = net > 0 ? 'text-green-400' : net < 0 ? 'text-red-400' : 'text-gray-400'
-                const netSign = net >= 0 ? '+' : ''
                 return (
-                  <div key={p.name} className="px-4 py-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-600 text-xs w-4">{i + 1}</span>
-                        <span className="text-white font-semibold">{p.name}</span>
-                        <span className="text-gray-500 text-xs">{p.sessions} session{p.sessions !== 1 ? 's' : ''}</span>
-                      </div>
-                      <span className={`font-bold ${netColor}`}>
-                        {netSign}${Math.abs(net).toFixed(2)}
-                      </span>
+                  <div key={p.name} className="grid grid-cols-3 px-4 py-3 items-center">
+                    <div>
+                      <p className="text-white font-medium">{p.name}</p>
+                      <p className="text-gray-600 text-xs">{p.sessions} session{p.sessions !== 1 ? 's' : ''}</p>
                     </div>
-                    <div className="flex gap-4 pl-6 text-xs text-gray-500">
-                      <span>Bought in: <span className="text-gray-300">${p.totalBuyIn.toFixed(2)}</span></span>
-                      <span>Cashed out: <span className="text-gray-300">${p.totalCashOut.toFixed(2)}</span></span>
-                    </div>
+                    <p className="text-gray-300 text-right">${p.totalBuyIn.toFixed(2)}</p>
+                    <p className={`font-bold text-right ${netColor}`}>
+                      {net >= 0 ? '+' : ''}${net.toFixed(2)}
+                    </p>
                   </div>
                 )
               })}
             </div>
-
-            {/* Totals footer */}
-            {rows.length > 0 && (() => {
-              const totalIn = rows.reduce((s, r) => s + r.totalBuyIn, 0)
-              const totalOut = rows.reduce((s, r) => s + r.totalCashOut, 0)
-              return (
-                <div className="border-t border-gray-700 px-4 py-3 flex justify-between text-xs text-gray-500">
-                  <span>{rows.length} players tracked</span>
-                  <span>Total circulated: ${totalIn.toFixed(0)}</span>
-                </div>
-              )
-            })()}
           </div>
         )}
       </div>
