@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { calculateSettlement, adjustProportional, adjustTruncate } from '../lib/settlement'
+import { calculateSettlement, adjustProportional } from '../lib/settlement'
 import Layout from '../components/Layout'
 
 export default function Session() {
@@ -15,8 +15,6 @@ export default function Session() {
   const [addingPlayer, setAddingPlayer] = useState(false)
   const [addError, setAddError] = useState('')
 
-  // Settlement adjustment
-  const [adjustMode, setAdjustMode] = useState('proportional') // 'proportional' | 'truncate'
   const [missingInput, setMissingInput] = useState('')
 
   useEffect(() => {
@@ -143,10 +141,7 @@ export default function Session() {
   const diff = potTotal - cashOutTotal // positive = missing, negative = extra
 
   const missingAmt = parseFloat(missingInput) || 0
-  const adjustedNets =
-    adjustMode === 'truncate'
-      ? adjustTruncate(playerNets)
-      : adjustProportional(playerNets, missingAmt)
+  const adjustedNets = adjustProportional(playerNets, missingAmt)
 
   const transactions = allSettled ? calculateSettlement(adjustedNets) : []
 
@@ -224,58 +219,25 @@ export default function Session() {
             {diff !== 0 && (
               <div className="px-4 py-3 border-b border-gray-800 bg-gray-800/40 space-y-3">
                 <p className="text-yellow-400 text-xs font-medium">
-                  ⚠ ${Math.abs(diff).toFixed(2)} {diff > 0 ? 'missing from' : 'extra in'} pot — choose how to settle:
+                  ⚠ ${Math.abs(diff).toFixed(2)} {diff > 0 ? 'missing from' : 'extra in'} pot — deduct from winners:
                 </p>
-
-                {/* Mode toggle */}
-                <div className="flex rounded-lg overflow-hidden border border-gray-700 text-sm">
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={missingInput}
+                    onChange={(e) => setMissingInput(e.target.value)}
+                    placeholder={`e.g. ${Math.abs(diff).toFixed(2)}`}
+                    className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-green-500"
+                  />
                   <button
-                    onClick={() => setAdjustMode('proportional')}
-                    className={`flex-1 py-1.5 transition-colors ${
-                      adjustMode === 'proportional'
-                        ? 'bg-green-700 text-white'
-                        : 'text-gray-400 hover:text-white'
-                    }`}
+                    onClick={() => setMissingInput(String(Math.abs(diff).toFixed(2)))}
+                    className="text-green-400 hover:text-green-300 text-xs px-3 border border-gray-600 rounded-lg transition-colors whitespace-nowrap"
                   >
-                    % from winners
-                  </button>
-                  <button
-                    onClick={() => setAdjustMode('truncate')}
-                    className={`flex-1 py-1.5 transition-colors ${
-                      adjustMode === 'truncate'
-                        ? 'bg-green-700 text-white'
-                        : 'text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    Truncate to $1
+                    Auto-fill
                   </button>
                 </div>
-
-                {adjustMode === 'proportional' && (
-                  <div className="flex gap-2">
-                    <input
-                      type="number"
-                      min="0"
-                      step="any"
-                      value={missingInput}
-                      onChange={(e) => setMissingInput(e.target.value)}
-                      placeholder={`Missing amount (e.g. ${Math.abs(diff).toFixed(2)})`}
-                      className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-green-500"
-                    />
-                    <button
-                      onClick={() => setMissingInput(String(Math.abs(diff).toFixed(2)))}
-                      className="text-green-400 hover:text-green-300 text-xs px-3 border border-gray-600 rounded-lg transition-colors whitespace-nowrap"
-                    >
-                      Auto-fill
-                    </button>
-                  </div>
-                )}
-
-                {adjustMode === 'truncate' && (
-                  <p className="text-gray-400 text-xs">
-                    Everyone's winnings/losses are rounded to whole dollars. Leftover cents go to the house.
-                  </p>
-                )}
               </div>
             )}
 

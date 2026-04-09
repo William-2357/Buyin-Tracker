@@ -28,10 +28,10 @@ export default function Stats() {
           byPlayer[pid] = { name, sessions: 0, totalBuyIn: 0, totalCashOut: 0 }
         }
 
-        const buyIn = (ps.buy_ins ?? []).reduce((s, v) => s + v, 0)
+        const buyIn = (ps.buy_ins ?? []).reduce((s, v) => s + Number(v), 0)
         byPlayer[pid].sessions += 1
         byPlayer[pid].totalBuyIn += buyIn
-        byPlayer[pid].totalCashOut += ps.cash_out
+        byPlayer[pid].totalCashOut += Number(ps.cash_out)
       }
 
       setRows(Object.values(byPlayer))
@@ -96,21 +96,20 @@ export default function Stats() {
                 const netColor = net > 0 ? 'text-green-400' : net < 0 ? 'text-red-400' : 'text-gray-400'
                 const netSign = net >= 0 ? '+' : ''
                 return (
-                  <div key={p.name} className="px-4 py-3 flex items-center gap-3">
-                    <span className="text-gray-600 text-xs w-5 text-right">{i + 1}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white font-medium truncate">{p.name}</p>
-                      <p className="text-gray-500 text-xs">
-                        {p.sessions} session{p.sessions !== 1 ? 's' : ''} · ${p.totalBuyIn.toFixed(0)} in
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className={`font-bold ${netColor}`}>
+                  <div key={p.name} className="px-4 py-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-600 text-xs w-4">{i + 1}</span>
+                        <span className="text-white font-semibold">{p.name}</span>
+                        <span className="text-gray-500 text-xs">{p.sessions} session{p.sessions !== 1 ? 's' : ''}</span>
+                      </div>
+                      <span className={`font-bold ${netColor}`}>
                         {netSign}${Math.abs(net).toFixed(2)}
-                      </p>
-                      <p className="text-gray-600 text-xs">
-                        out ${p.totalCashOut.toFixed(0)}
-                      </p>
+                      </span>
+                    </div>
+                    <div className="flex gap-4 pl-6 text-xs text-gray-500">
+                      <span>Bought in: <span className="text-gray-300">${p.totalBuyIn.toFixed(2)}</span></span>
+                      <span>Cashed out: <span className="text-gray-300">${p.totalCashOut.toFixed(2)}</span></span>
                     </div>
                   </div>
                 )
