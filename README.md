@@ -1,5 +1,7 @@
 # Poker Buyin Tracker
 
+Hello
+
 A mobile-friendly web app for tracking poker sessions and settling payments between players. One person runs the app as host — no accounts needed for individual players.
 
 ## Features
@@ -12,15 +14,15 @@ A mobile-friendly web app for tracking poker sessions and settling payments betw
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | [React 19](https://react.dev) |
-| Routing | [React Router v7](https://reactrouter.com) |
-| Styling | [Tailwind CSS v4](https://tailwindcss.com) |
-| Build tool | [Vite](https://vite.dev) |
+| Layer              | Technology                                                       |
+| ------------------ | ---------------------------------------------------------------- |
+| Frontend           | [React 19](https://react.dev)                                    |
+| Routing            | [React Router v7](https://reactrouter.com)                       |
+| Styling            | [Tailwind CSS v4](https://tailwindcss.com)                       |
+| Build tool         | [Vite](https://vite.dev)                                         |
 | Backend / Database | [Supabase](https://supabase.com) (Postgres + Row Level Security) |
-| Auth | Supabase Auth (email/password) |
-| Hosting | [Vercel](https://vercel.com) |
+| Auth               | Supabase Auth (email/password)                                   |
+| Hosting            | [Vercel](https://vercel.com)                                     |
 
 ## Project Structure
 
@@ -55,6 +57,7 @@ player_sessions — a player's record in a session (player_id, session_id, buy_i
 ## Local Setup
 
 **1. Clone and install**
+
 ```bash
 git clone https://github.com/William-2357/Poker-Buyin-Tracker.git
 cd Poker-Buyin-Tracker
@@ -64,13 +67,16 @@ npm install
 **2. Create a Supabase project** at [supabase.com](https://supabase.com), then run `supabase_schema.sql` in the SQL Editor.
 
 **3. Add environment variables** — create `.env.local` in the project root:
+
 ```
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your_publishable_key
 ```
+
 Find these in your Supabase project under **Settings → API**.
 
 **4. Run the dev server**
+
 ```bash
 npm run dev
 ```
